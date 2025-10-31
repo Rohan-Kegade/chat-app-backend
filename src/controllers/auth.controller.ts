@@ -6,32 +6,33 @@ import { generateToken } from "../utils/jwt.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
-export const registerUser = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { name, email, password, avatar } = req.body;
+export const registerUser = asyncHandler(async (req: Request, res: Response) => {
+  const { name, email, password, avatar } = req.body;
 
-    if (!name || !email || !password) {
-      throw new ApiError(400, "Name, email, and password are required.");
-    }
+  if (!name || !email || !password) {
+    throw new ApiError(400, "Name, email, and password are required.");
+  }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new ApiError(400, "User already exists.");
-    }
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ApiError(400, "User already exists.");
+  }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      avatar,
-    });
+  const user = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+    avatar,
+  });
 
-    const token = generateToken(user._id.toString());
+  const token = generateToken(user._id.toString());
 
-    return res.status(201).json(
-      new ApiResponse(201, "User registered successfully", {
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      {
         user: {
           id: user._id,
           name: user.name,
@@ -39,10 +40,11 @@ export const registerUser = asyncHandler(
           avatar: user.avatar,
         },
         token,
-      })
-    );
-  }
-);
+      },
+      "User registered successfully"
+    )
+  );
+});
 
 export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -66,14 +68,18 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   const token = generateToken(user._id.toString());
 
   return res.status(200).json(
-    new ApiResponse(200, "Login successful", {
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
+    new ApiResponse(
+      200,
+      {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+        },
+        token,
       },
-      token,
-    })
+      "Login successful"
+    )
   );
 });
