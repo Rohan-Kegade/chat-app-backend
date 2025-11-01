@@ -23,35 +23,31 @@ const startServer = async (): Promise<void> => {
 
     // Socket.IO logic
     io.on("connection", (socket) => {
-      console.log("New client connected:", socket.id);
+      console.log("New client:", socket.id);
 
-      // User setup
       socket.on("setup", (userData) => {
-        console.log("setup event received:", userData);
-        socket.join(userData._id);
+        console.log("setup for:", userData?.id || userData?._id);
+        socket.join(userData?.id || userData?._id);
         socket.emit("connected");
       });
 
-      // Join specific chat room
       socket.on("join chat", (roomId) => {
         socket.join(roomId);
-        console.log(`User joined chat room: ${roomId}`);
+        console.log(`${socket.id} joined room ${roomId}`);
+        console.log("   rooms now:", [...socket.rooms]);
       });
 
-      // Send and broadcast new messages
       socket.on("new message", (message) => {
-        console.log("Received message:", message);
-        const chat = message.chat;
-        if (!chat?.users) return;
+        console.log(" new message for chat:", message.chat?._id);
+        console.log("   rooms of sender:", [...socket.rooms]);
 
-        chat.users.forEach((user: any) => {
-          if (user._id === message.sender._id) return;
-          socket.in(user._id).emit("message received", message);
-        });
+        const room = message.chat?._id;
+        if (!room) return;
+        socket.to(room).emit("message received", message);
       });
 
       socket.on("disconnect", () => {
-        console.log("User disconnected:", socket.id);
+        console.log("disconnected:", socket.id);
       });
     });
 

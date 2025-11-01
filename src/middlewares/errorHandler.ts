@@ -1,16 +1,35 @@
-import type { Request, Response, NextFunction } from "express";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
+import { Request, Response, NextFunction } from "express";
+import { ApiError } from "../utils/ApiError";
+import { ApiResponse } from "../utils/ApiResponse";
 
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (
+  err: unknown,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   console.error("Error:", err);
 
-  if (err instanceof ApiError) {
-    return res
-      .status(err.statusCode)
-      .json(new ApiResponse(err.statusCode, err.errors, err.message));
+  if (res.headersSent) {
+    return next(err);
   }
 
-  // fallback for unexpected errors
-  return res.status(500).json(new ApiResponse(500, "Internal Server Error", err.message));
+  // Known custom error
+  if (err instanceof ApiError) {
+    res
+      .status(err.statusCode)
+      .json(new ApiResponse(false, err.message, null));
+    return;
+  }
+
+  // Unknown or unhandled error
+  if (err instanceof Error) {
+    res
+      .status(500)
+      .json(new ApiResponse(false, err.message || "Internal Server Error", null));
+    return;
+  }
+
+  // Fallback for anything unexpected
+  res.status(500).json(new ApiResponse(false, "Unknown error occurred", null));
 };

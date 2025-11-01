@@ -15,13 +15,9 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   // Exclude password from results
   const users = await User.find(keyword).select("-password");
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, users, "Users fetched successfully"));
+  return res.status(200).json(new ApiResponse(true, "Users fetched successfully", users));
 });
 
 export const getCurrentUser = asyncHandler(async (req: any, res: Response) => {
-  return res
-    .status(200)
-    .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+  return res.status(200).json(new ApiResponse(true, "Current user fetched successfully", req.user));
 });
